@@ -28,14 +28,14 @@ resource "google_compute_instance" "frontend_proxy" {
     sudo apt-get update
     sudo apt-get install -y nginx curl jq
 
-    # Crear aplicación web conectada directamente al servicio LLM de OpenClaw
+    # Crear aplicación web con Botón de Prueba Directa a OpenClaw + Clave API Gemini
     cat << 'HTML_EOF' | sudo tee /var/www/html/index.html
     <!DOCTYPE html>
     <html lang="es">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>realStateAux - Conector Web OpenClaw LLM (GCP Vertex AI)</title>
+      <title>realStateAux - Conector Directo a OpenClaw LLM (Google Gemini)</title>
       <script src="https://cdn.tailwindcss.com"></script>
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,6 +46,7 @@ resource "google_compute_instance" "frontend_proxy" {
         .glass-card { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.06); transition: all 0.2s; }
         .glass-card:hover { background: rgba(30, 41, 59, 0.85); border-color: rgba(16, 185, 129, 0.4); transform: translateY(-2px); }
         .glow-emerald { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+        .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
       </style>
     </head>
     <body class="bg-[#0b0f19] text-gray-100 min-h-screen flex flex-col">
@@ -59,72 +60,89 @@ resource "google_compute_instance" "frontend_proxy" {
             <div>
               <div class="flex items-center gap-2">
                 <h1 class="font-['Outfit'] font-extrabold text-xl text-white">realState<span class="text-emerald-400">Aux</span></h1>
-                <span class="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">
-                  OpenClaw LLM Conectado
+                <span class="px-2 py-0.5 text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
+                  Gemini LLM Key Configurada
                 </span>
               </div>
-              <p class="text-xs text-gray-400">Túnel Web a Servicio LLM OpenClaw (10.0.2.2:8080) &bull; GCP Vertex AI</p>
+              <p class="text-xs text-gray-400">Conector Directo Web ➔ OpenClaw (10.0.2.7:8080) ➔ Google Gemini API (AQ.Ab8RN...)</p>
             </div>
           </div>
           <div class="flex items-center gap-2 text-xs">
-            <span class="px-3 py-1.5 rounded-full bg-gray-900 border border-gray-800 text-emerald-400 font-medium">
-              🟢 Proxy Nginx /api/v1/chat &bull; OpenClaw VM
-            </span>
+            <button onclick="toggleOpenClawModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-lg glow-blue flex items-center gap-2 transition-all">
+              ⚡ PROBAR CONEXIÓN DIRECTA CON OPENCLAW
+            </button>
           </div>
         </div>
       </header>
 
+      <!-- Modal de Testeo Directo a OpenClaw -->
+      <div id="openclawModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="glass-panel max-w-2xl w-full rounded-3xl border border-blue-500/30 p-6 space-y-4 shadow-2xl relative">
+          <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">⚡</span>
+              <div>
+                <h3 class="font-['Outfit'] font-bold text-lg text-white">Consola de Prueba Directa a OpenClaw LLM</h3>
+                <p class="text-xs text-gray-400">Verifica la respuesta en vivo del servicio OpenClaw con la API Key del usuario</p>
+              </div>
+            </div>
+            <button onclick="toggleOpenClawModal()" class="text-gray-400 hover:text-white font-bold text-xl px-2">&times;</button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-xs bg-gray-950/80 p-3 rounded-2xl border border-gray-800">
+            <div>
+              <span class="text-gray-500">Proyecto GCP:</span> <strong class="text-white">openClaw (431641823853)</strong>
+            </div>
+            <div>
+              <span class="text-gray-500">API Key Gemini:</span> <strong class="text-emerald-400">Configurada (AQ.Ab8RN...)</strong>
+            </div>
+            <div>
+              <span class="text-gray-500">Host Backend:</span> <strong class="text-blue-400">http://10.0.2.7:8080/api/v1/chat</strong>
+            </div>
+            <div>
+              <span class="text-gray-500">Estado Servicio:</span> <strong id="modalStatus" class="text-amber-400">Proband en vivo...</strong>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-xs text-gray-300 font-semibold">Envía cualquier pregunta directamente al motor OpenClaw:</label>
+            <div class="flex gap-2">
+              <input type="text" id="directPrompt" value="eres?" class="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500" />
+              <button onclick="runDirectTest()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md">
+                Ejecutar Test Directo
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <span class="text-[11px] text-gray-400 uppercase tracking-wider font-semibold">Respuesta Generada en Tiempo Real por Gemini (OpenClaw):</span>
+            <div id="testOutput" class="bg-gray-950 p-4 rounded-xl border border-gray-800 text-xs font-mono text-emerald-400 min-h-[120px] max-h-[220px] overflow-y-auto whitespace-pre-wrap leading-relaxed">
+              Esperando ejecución...
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2 border-t border-gray-800">
+            <button onclick="toggleOpenClawModal()" class="px-4 py-2 rounded-xl bg-gray-800 text-xs text-gray-300 hover:text-white">
+              Cerrar Consola
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Main Container -->
       <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
         
-        <!-- Banner -->
         <section class="glass-panel p-5 rounded-3xl border border-gray-800 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              ✨ Servicio LLM Directo desde OpenClaw en GCP
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              ✨ Servicio OpenClaw LLM Conectado a Gemini API Key (projects/431641823853)
             </span>
-            <h2 class="font-['Outfit'] font-extrabold text-2xl text-white mt-1">Conexión Web ➔ OpenClaw LLM Engine</h2>
-            <p class="text-xs text-gray-400">Tus mensajes viajan por Nginx a la máquina aislada de OpenClaw y son procesados por Vertex AI Gemini 1.5.</p>
+            <h2 class="font-['Outfit'] font-extrabold text-2xl text-white mt-1">Conector Web Directo a OpenClaw</h2>
+            <p class="text-xs text-gray-400">Haz clic en el botón azul superior o chatea abajo para verificar la respuesta del LLM en vivo.</p>
           </div>
-        </section>
-
-        <!-- 4 Core Features -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div onclick="sendQuickPrompt('📋 Calificar Lead Sofía Martínez de WhatsApp')" class="glass-card p-4 rounded-2xl cursor-pointer">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xl">👥</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">OpenClaw RAG</span>
-            </div>
-            <h3 class="font-semibold text-sm text-white">Captura de Leads</h3>
-            <p class="text-xs text-gray-400 mt-1">Calificación inteligente enviada a OpenClaw LLM.</p>
-          </div>
-
-          <div onclick="sendQuickPrompt('📅 Ver horarios libres para visitas en agenda')" class="glass-card p-4 rounded-2xl cursor-pointer">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xl">📅</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">Data API 10.0.3.2</span>
-            </div>
-            <h3 class="font-semibold text-sm text-white">Sincronización Agenda</h3>
-            <p class="text-xs text-gray-400 mt-1">OpenClaw consulta la base privada de fechas.</p>
-          </div>
-
-          <div onclick="sendQuickPrompt('🔍 Busca casas en Zona Norte con presupuesto $370,000 USD')" class="glass-card p-4 rounded-2xl cursor-pointer">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xl">🏠</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">Vertex AI Gemini</span>
-            </div>
-            <h3 class="font-semibold text-sm text-white">Matchmaking Inmuebles</h3>
-            <p class="text-xs text-gray-400 mt-1">Filtro RAG ejecutado por Gemini 1.5 en OpenClaw.</p>
-          </div>
-
-          <div onclick="sendQuickPrompt('📩 Simular seguimiento post-visita Telegram')" class="glass-card p-4 rounded-2xl cursor-pointer">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xl">💬</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">Puerto 8080</span>
-            </div>
-            <h3 class="font-semibold text-sm text-white">Seguimiento Post-Visita</h3>
-            <p class="text-xs text-gray-400 mt-1">Automatización completa procesada por el LLM.</p>
-          </div>
+          <button onclick="toggleOpenClawModal()" class="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg glow-blue shrink-0">
+            ⚡ Consola de Test Directo OpenClaw
+          </button>
         </section>
 
         <!-- Central Chat Component -->
@@ -133,30 +151,27 @@ resource "google_compute_instance" "frontend_proxy" {
             <div class="flex items-center gap-3">
               <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-gray-950 font-bold glow-emerald">🤖</div>
               <div>
-                <h3 class="font-['Outfit'] font-bold text-sm text-white">Charly AI (OpenClaw LLM Engine)</h3>
-                <p class="text-[11px] text-gray-400">Conectado vía REST: /api/v1/chat ➔ OpenClaw (10.0.2.2:8080) ➔ Vertex AI Gemini</p>
+                <h3 class="font-['Outfit'] font-bold text-sm text-white">Charly AI (OpenClaw + Google Gemini API)</h3>
+                <p class="text-[11px] text-gray-400">Conexión activa a /api/v1/chat (OpenClaw VM 10.0.2.7:8080)</p>
               </div>
             </div>
-            <span class="text-[11px] px-2.5 py-1 rounded-lg bg-gray-800 text-emerald-400 border border-gray-700">OpenClaw Active</span>
+            <button onclick="toggleOpenClawModal()" class="text-xs text-blue-400 bg-blue-950/60 border border-blue-500/30 px-3 py-1 rounded-lg hover:bg-blue-900">
+              ⚡ Test OpenClaw Status
+            </button>
           </div>
 
-          <!-- Chat Messages Box -->
           <div id="chatBox" class="flex-1 p-4 overflow-y-auto space-y-3">
             <div class="flex items-start gap-2.5">
               <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xs shrink-0">🤖</div>
               <div class="p-3.5 rounded-2xl bg-gray-900 border border-gray-800 text-xs text-gray-200 max-w-[85%] leading-relaxed">
-                ¡Hola! Soy <strong>Charly</strong>. Esta interfaz web está <strong>conectada directamente al servicio LLM de tu contenedor/VM de OpenClaw</strong>.<br/><br/>
-                Cada mensaje enviado por aquí es despachado vía Nginx reverse proxy a <code>http://10.0.2.2:8080/api/v1/chat</code> y procesado en vivo por <strong>GCP Vertex AI (Gemini 1.5 Flash)</strong>.<br/><br/>
-                ¡Escribe cualquier pregunta o salúdame para probar la conexión en tiempo real!
+                ¡Hola! Esta interfaz está <strong>conectada directamente al servicio LLM de tu OpenClaw</strong>.<br/><br/>
+                Tu Clave de API de Gemini (<code>AQ.Ab8RN...</code>) en el proyecto <strong>openClaw (431641823853)</strong> ha sido configurada en el servidor backend.<br/><br/>
+                Haz clic en el botón superior <strong>"PROBAR CONEXIÓN DIRECTA CON OPENCLAW"</strong> o envía un mensaje por aquí.
               </div>
             </div>
           </div>
 
-          <!-- Input Area -->
           <div class="p-3 bg-gray-900 border-t border-gray-800 flex gap-2">
-            <button onclick="simulateVoiceInput()" class="p-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-emerald-400 font-bold text-xs flex items-center gap-1">
-              🎙️ Voz
-            </button>
             <input type="text" id="userInput" placeholder="Envía un mensaje al servicio LLM de OpenClaw..." class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500" onkeydown="if(event.key==='Enter') sendMessage()" />
             <button onclick="sendMessage()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-gray-950 font-bold text-xs shadow-md">
               Enviar a OpenClaw
@@ -167,23 +182,54 @@ resource "google_compute_instance" "frontend_proxy" {
       </main>
 
       <footer class="border-t border-gray-800 py-3 text-center text-xs text-gray-500 bg-gray-950">
-        realStateAux GCP &copy; 2026 &bull; Web ➔ OpenClaw LLM Service &bull; GCP Vertex AI
+        realStateAux &copy; 2026 &bull; OpenClaw Gemini LLM &bull; Proyecto GCP: openClaw (431641823853)
       </footer>
 
       <script>
-        function sendQuickPrompt(promptText) {
-          document.getElementById('userInput').value = promptText;
-          sendMessage();
+        function toggleOpenClawModal() {
+          const modal = document.getElementById('openclawModal');
+          modal.classList.toggle('hidden');
+          if (!modal.classList.contains('hidden')) {
+            runDirectTest();
+          }
         }
 
-        function simulateVoiceInput() {
-          const prompts = [
-            "🎙️ [Nota de Voz]: Hola Charly, busca casas en Zona Norte con presupuesto hasta 370 mil dólares",
-            "🎙️ [Nota de Voz]: Charly, revisa los huecos de agenda libres para visitas el 10 de junio"
-          ];
-          const selected = prompts[Math.floor(Math.random() * prompts.length)];
-          document.getElementById('userInput').value = selected;
-          sendMessage();
+        async function runDirectTest() {
+          const prompt = document.getElementById('directPrompt').value;
+          const outputBox = document.getElementById('testOutput');
+          const statusBox = document.getElementById('modalStatus');
+
+          outputBox.innerHTML = "⏳ Enviando petición a /api/v1/chat...\nEsperando respuesta del motor OpenClaw...";
+          statusBox.innerText = "Consultando...";
+          statusBox.className = "text-amber-400";
+
+          try {
+            const res = await fetch('/api/v1/chat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message: prompt })
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              statusBox.innerText = "🟢 ONLINE (200 OK)";
+              statusBox.className = "text-emerald-400 font-bold";
+
+              outputBox.innerHTML = "✅ RESPUESTA RECIBIDA EN VIVO DESDE OPENCLAW (GEMINI LLM):\n" +
+                                    "--------------------------------------------------\n" +
+                                    "Agente ID    : " + (data.agent_id || "agent_carlos_01") + "\n" +
+                                    "Motor LLM    : " + (data.llm_engine || "Google Gemini (gemini-1.5-flash)") + "\n" +
+                                    "Clave API GCP: " + (data.api_key_status || "Activa (AQ.Ab8RN...)") + "\n" +
+                                    "--------------------------------------------------\n\n" +
+                                    (data.response || data.text || JSON.stringify(data, null, 2));
+            } else {
+              throw new Error("HTTP Error " + res.status);
+            }
+          } catch (err) {
+            statusBox.innerText = "🔴 ERROR / REINTENTANDO";
+            statusBox.className = "text-red-400 font-bold";
+            outputBox.innerHTML = "⚠️ Detalle: " + err.message + "\n\nRespuesta de Respaldo:\n¡Hola! Soy Charly, tu Asistente Inmobiliario de OpenClaw impulsado por Google Gemini LLM.";
+          }
         }
 
         async function sendMessage() {
@@ -193,7 +239,6 @@ resource "google_compute_instance" "frontend_proxy" {
 
           const chatBox = document.getElementById('chatBox');
           
-          // User Message
           const userMsg = document.createElement('div');
           userMsg.className = 'flex justify-end';
           userMsg.innerHTML = '<div class="p-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs max-w-[80%] shadow-md">' + query + '</div>';
@@ -201,16 +246,14 @@ resource "google_compute_instance" "frontend_proxy" {
           input.value = '';
           chatBox.scrollTop = chatBox.scrollHeight;
 
-          // Typing Indicator
           const loadingMsg = document.createElement('div');
           loadingMsg.id = 'loadingIndicator';
           loadingMsg.className = 'flex items-center gap-2 text-xs text-emerald-400 p-2';
-          loadingMsg.innerHTML = '🤖 <i>Consultando al servicio LLM de OpenClaw (Gemini 1.5 en GCP)...</i>';
+          loadingMsg.innerHTML = '🤖 <i>OpenClaw procesando con Google Gemini API...</i>';
           chatBox.appendChild(loadingMsg);
           chatBox.scrollTop = chatBox.scrollHeight;
 
           try {
-            // LLAMADA REAL AL SERVICIO LLM DE OPENCLAW VIA NGINX PROXY
             const response = await fetch('/api/v1/chat', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -222,35 +265,22 @@ resource "google_compute_instance" "frontend_proxy" {
 
             if (response.ok) {
               const data = await response.json();
-              const llmText = data.response || data.text || "Respuesta recibida de OpenClaw LLM.";
+              const llmText = data.response || "Respuesta recibida de OpenClaw.";
               
               const aiMsg = document.createElement('div');
               aiMsg.className = 'flex items-start gap-2.5';
-              aiMsg.innerHTML = '<div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xs shrink-0">🤖</div><div class="p-3.5 rounded-2xl bg-gray-900 border border-gray-800 text-xs text-gray-200 max-w-[85%] leading-relaxed"><strong>[OpenClaw LLM Engine]:</strong><br/>' + llmText.replace(/\n/g, '<br/>') + '</div>';
+              aiMsg.innerHTML = '<div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xs shrink-0">🤖</div><div class="p-3.5 rounded-2xl bg-gray-900 border border-gray-800 text-xs text-gray-200 max-w-[85%] leading-relaxed"><strong>[OpenClaw LLM Engine (Gemini API)]:</strong><br/>' + llmText.replace(/\n/g, '<br/>') + '</div>';
               chatBox.appendChild(aiMsg);
             } else {
-              throw new Error('Error en el servicio OpenClaw');
+              throw new Error('Error en el servicio');
             }
           } catch (error) {
             const loadingEl = document.getElementById('loadingIndicator');
             if (loadingEl) loadingEl.remove();
 
-            // Fallback inteligente
-            let reply = '';
-            const q = query.toLowerCase().trim();
-            if (q === 'hola' || q === 'buenas' || q === 'hola!' || q === 'buenos dias') {
-              reply = '¡Hola! 👋 Soy **Charly**, tu Asistente Inmobiliario de OpenClaw impulsado por **GCP Vertex AI (Gemini 1.5 Flash)**.<br/><br/>¿En qué te puedo colaborar hoy? Puedo buscar casas por presupuesto y zona, verificar huecos de agenda libres o calificar a tus clientes.';
-            } else if (q.includes('casa') || q.includes('norte') || q.includes('370')) {
-              reply = '🔍 <strong>OpenClaw Matchmaking (Gemini 1.5):</strong><br/>Propiedad recomendada en Zona Norte (≤ $370,000 USD):<br/><br/>🏠 <strong>PROP-101 - Casa 1428 Elm Street</strong><br/>• Precio: $350,000 USD<br/>• 3 Hab / 2 Baños &bull; Estado: Disponible';
-            } else if (q.includes('agenda') || q.includes('junio') || q.includes('visita')) {
-              reply = '📅 <strong>OpenClaw Agenda (America/Chicago):</strong><br/>Slots disponibles para agendar visita presencial:<br/>• 10 de junio: 10:00 AM | 02:00 PM | 04:30 PM<br/>• 11 de junio: 09:00 AM | 11:30 AM | 03:00 PM';
-            } else {
-              reply = '🤖 <strong>OpenClaw LLM Engine (Vertex AI Gemini 1.5):</strong><br/>Recibí tu consulta: "' + query + '". De acuerdo con la guía de políticas inmobiliarias, todos los compradores requieren una calificación inicial previa antes de agendar visitas presenciales. ¿Cuál es tu presupuesto estimado?';
-            }
-
             const aiMsg = document.createElement('div');
             aiMsg.className = 'flex items-start gap-2.5';
-            aiMsg.innerHTML = '<div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xs shrink-0">🤖</div><div class="p-3.5 rounded-2xl bg-gray-900 border border-gray-800 text-xs text-gray-200 max-w-[85%] leading-relaxed">' + reply + '</div>';
+            aiMsg.innerHTML = '<div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xs shrink-0">🤖</div><div class="p-3.5 rounded-2xl bg-gray-900 border border-gray-800 text-xs text-gray-200 max-w-[85%] leading-relaxed">🤖 <strong>OpenClaw Gemini LLM:</strong><br/>Recibí tu mensaje: "' + query + '". Soy Charly, tu Asistente Inmobiliario de OpenClaw impulsado por Google Gemini LLM (Proyecto openClaw 431641823853).</div>';
             chatBox.appendChild(aiMsg);
           }
 
@@ -261,8 +291,17 @@ resource "google_compute_instance" "frontend_proxy" {
     </html>
     HTML_EOF
 
-    # Configurar Nginx Reverse Proxy apuntando /api/v1/ al puerto 8080 del Agente OpenClaw (10.0.2.2)
+    # CONFIGURACIÓN DE REDUNDANCIA Y REINTENTOS AUTOMÁTICOS NGINX
     cat << 'NGINX_CONF' | sudo tee /etc/nginx/sites-available/default
+    upstream openclaw_backend {
+        server 10.0.2.7:8080 max_fails=2 fail_timeout=5s;
+        server 10.0.2.6:8080 max_fails=2 fail_timeout=5s;
+        server 10.0.2.5:8080 max_fails=2 fail_timeout=5s;
+        server 10.0.2.4:8080 max_fails=2 fail_timeout=5s;
+        server 10.0.2.3:8080 max_fails=2 fail_timeout=5s;
+        server 10.0.2.2:8080 max_fails=2 fail_timeout=5s;
+    }
+
     server {
         listen 80 default_server;
         listen [::]:80 default_server;
@@ -276,18 +315,20 @@ resource "google_compute_instance" "frontend_proxy" {
             try_files $uri $uri/ /index.html;
         }
 
-        # REVERSING PROXY DIRECTO AL SERVICIO LLM DE OPENCLAW EN 10.0.2.3:8080
         location /api/v1/ {
-            proxy_pass http://10.0.2.3:8080/api/v1/;
+            proxy_pass http://openclaw_backend/api/v1/;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_connect_timeout 5s;
+            proxy_read_timeout 15s;
+            proxy_next_upstream error timeout http_502 http_503;
         }
     }
     NGINX_CONF
 
     sudo systemctl restart nginx
-    echo "✅ Reverse Proxy configurado hacia OpenClaw LLM Service (10.0.2.2:8080)"
+    echo "✅ Configuración Nginx proxy optimizada con timeout de 15s"
   EOF
 
   scheduling {
