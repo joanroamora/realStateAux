@@ -6,7 +6,7 @@ Plataforma de **Asistente Inmobiliario Autónomo** multi-usuario con arquitectur
 
 ## 🎯 Descripción del Proyecto
 
-El sistema está diseñado para que corredores e agencias inmobiliarias cuenten con un asistente de IA dedicado denominado **"Charly"**, capaz de atender clientes 24/7 vía WhatsApp Business o Telegram Bot API, calificar leads, consultar el inventario de propiedades y agendar visitas presenciales.
+El sistema está diseñado para que corredores y agencias inmobiliarias cuenten con un asistente de IA dedicado denominado **"Charly"**, capaz de atender clientes 24/7 vía WhatsApp Business o Telegram Bot API, calificar leads, consultar el inventario de propiedades y agendar visitas presenciales.
 
 ---
 
@@ -20,6 +20,12 @@ El sistema está diseñado para que corredores e agencias inmobiliarias cuenten 
 │   ├── calendar_mock.json             # Simulador de disponibilidad de agenda del agente
 │   ├── faq_inmobiliaria.md            # Base de conocimiento y políticas de atención
 │   └── leads_synthetic.json           # Perfiles sintéticos de leads (WhatsApp / Telegram)
+├── api/                               # API REST Ligera (FastAPI - Python)
+│   ├── app/                           # Código fuente (main.py, auth.py, config.py)
+│   ├── requirements.txt               # Dependencias Python ultraligeras
+│   ├── Dockerfile                     # Construcción Docker optimizada para e2-micro
+│   ├── test_api.py                    # Suite de pruebas automatizadas
+│   └── README.md                      # Documentación detallada de endpoints y uso de Docker
 └── terraform/                         # Infraestructura como Código en GCP
     ├── main.tf                        # Orquestación de módulos de infraestructura
     ├── variables.tf                   # Variables globales de Terraform
@@ -35,24 +41,23 @@ El sistema está diseñado para que corredores e agencias inmobiliarias cuenten 
 
 ---
 
-## 💾 Datos Dummy de Pruebas (`/data`)
+## 🚀 Servicios Backend (`/api`)
 
-Los datos iniciales de prueba están configurados en la carpeta [`/data`](file:///home/joanr/agentic-platforms/GCP/realStateAux/data):
+La API REST en **FastAPI** sirve los datos dummy de solo lectura con protección por token (`X-API-Token`) y consumo reducido (<40MB RAM):
 
-- **[properties_dummy.json](file:///home/joanr/agentic-platforms/GCP/realStateAux/data/properties_dummy.json)**: Propiedades en zonas Norte, Oeste y Costera.
-- **[calendar_mock.json](file:///home/joanr/agentic-platforms/GCP/realStateAux/data/calendar_mock.json)**: Disponibilidad de agenda para agendamiento de visitas.
-- **[faq_inmobiliaria.md](file:///home/joanr/agentic-platforms/GCP/realStateAux/data/faq_inmobiliaria.md)**: Reglas de negocio (calificación previa, confidencialidad, comisiones).
-- **[leads_synthetic.json](file:///home/joanr/agentic-platforms/GCP/realStateAux/data/leads_synthetic.json)**: Ejemplos de leads entrantes por WhatsApp y Telegram.
+- **[`GET /health`](file:///home/joanr/agentic-platforms/GCP/realStateAux/api/README.md)**: Monitoreo de salud.
+- **[`GET /api/v1/properties`](file:///home/joanr/agentic-platforms/GCP/realStateAux/api/README.md)**: Inventario de propiedades.
+- **[`GET /api/v1/calendar`](file:///home/joanr/agentic-platforms/GCP/realStateAux/api/README.md)**: Disponibilidad de agendamiento.
+- **[`GET /api/v1/faq`](file:///home/joanr/agentic-platforms/GCP/realStateAux/api/README.md)**: FAQ y políticas (Markdown).
+- **[`GET /api/v1/leads`](file:///home/joanr/agentic-platforms/GCP/realStateAux/api/README.md)**: Leads sintéticos para simulación.
 
 ---
 
 ## ☁️ Infraestructura GCP con Terraform (`/terraform`)
 
-La infraestructura sigue una política de **Ahorro Extremo de Costos** y **Aislamiento Multi-usuario**:
-
 - **Subred Pública Frontend**: Hospeda el proxy inverso/interfaz web pública.
 - **Subred Protegida Backend**: Instancias `e2-micro` aisladas de Internet para OpenClaw.
 - **Subred Privada Datos**: Instancia de datos `e2-micro` accesible exclusivamente desde el frontend autorizado.
-- **Acceso Administrativo**: Conexiones SSH seguras vía **GCP IAP (Identity-Aware Proxy)** sin IPs públicas expuestas.
+- **Acceso Administrativo**: Conexiones SSH seguras vía **GCP IAP (Identity-Aware Proxy)**.
 
-Para más información y comandos de despliegue, consulta el **[README de Terraform](file:///home/joanr/agentic-platforms/GCP/realStateAux/terraform/README.md)**.
+Para más información, consulta el **[README de Terraform](file:///home/joanr/agentic-platforms/GCP/realStateAux/terraform/README.md)** y el **[README de la API](file:///home/joanr/agentic-platforms/GCP/realStateAux/api/README.md)**.
