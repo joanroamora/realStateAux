@@ -3,6 +3,16 @@ output "vpc_name" {
   description = "Nombre de la VPC creada"
 }
 
+output "frontend_public_ip" {
+  value       = module.frontend_proxy.public_ip
+  description = "Dirección IP Pública Externa del servicio expuesto en la Nube (GCP)"
+}
+
+output "frontend_public_url" {
+  value       = "http://${module.frontend_proxy.public_ip}"
+  description = "URL Pública para acceder a la aplicación desde cualquier navegador en Internet"
+}
+
 output "private_db_internal_ip" {
   value       = module.database.db_internal_ip
   description = "IP privada de la base de datos (accesible únicamente desde la subred autorizada)"
@@ -18,11 +28,11 @@ output "cost_optimization_summary" {
     ===============================================================
     RESUMEN DE OPTIMIZACIÓN DE COSTOS DE INFRAESTRUCTURA (GCP)
     ===============================================================
-    - DB Machine: e2-micro (2 vCPU, 1GB RAM) -> ~$7 USD/mes o Elegible para GCP Free Tier
-    - Agent VMs: e2-micro por usuario -> ~$7 USD/mes por usuario
+    - Frontend Proxy VM: e2-micro (2 vCPU, 1GB RAM) con IP Pública Externa
+    - DB Machine: e2-micro (2 vCPU, 1GB RAM) -> IP Privada Aislada (Free Tier)
+    - Agent VMs: e2-micro por usuario -> IP Privada Aislada (Vertex AI Gemini 1.5)
     - Storage: Standard Persistent Disk (10GB pd-standard) -> ~$0.40 USD/mes por disco
-    - IP Pública: Sin IPs externas asignadas a DB ni Agentes (Ahorro de ~$3.60/mes por IP)
-    - Acceso Administrativo: SSH a través de GCP IAP (Sin costo de Bastion ni IPs)
+    - Acceso Administrativo: SSH a través de GCP IAP (Sin costo de Bastion)
     ===============================================================
   EOF
   description = "Detalle de optimización de costos en GCP"

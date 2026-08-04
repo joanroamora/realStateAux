@@ -76,3 +76,14 @@ module "agent_backend" {
   service_account_email = google_service_account.openclaw_vertex_sa.email
   depends_on            = [google_project_service.vertex_ai_api]
 }
+
+# 5. Módulo Frontend Público: Instancia e2-micro expuesta en IP Pública GCP
+module "frontend_proxy" {
+  source             = "./modules/frontend_proxy"
+  instance_name      = "realstate-frontend-proxy"
+  zone               = var.zone
+  machine_type       = "e2-micro"
+  frontend_subnet_id = module.vpc.frontend_subnet_id
+  disk_size_gb       = 10
+  environment        = var.environment
+}

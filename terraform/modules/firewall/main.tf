@@ -71,7 +71,7 @@ resource "google_compute_firewall" "allow_iap_ssh" {
   }
 
   # Bloque de IP oficial de GCP Identity-Aware Proxy
-  source_ranges = ["35.190.247.0/20"]
+  source_ranges = ["35.190.240.0/20"]
   target_tags   = ["frontend-proxy", "openclaw-backend", "private-db"]
   description   = "Permite SSH seguro sin IP pública expuesta mediante Google Cloud IAP"
 }
