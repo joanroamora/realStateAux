@@ -107,6 +107,7 @@ async def health():
     }
 
 @app.post("/api/v1/chat")
+@app.post("/chat")
 async def chat(req: ChatRequest):
     logger.info(f"Chat request recibida en OpenClaw: '{req.message}'")
     reply = query_google_gemini_llm(req.message)
