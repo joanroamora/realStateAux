@@ -6,7 +6,7 @@ export default function ChatCharly({ initialPrompt }) {
     {
       id: 1,
       sender: 'charly',
-      text: '¡Hola! Soy **Charly**, tu Asistente Inmobiliario Autónomo 24/7 de OpenClaw. Estoy conectado al inventario privado, la agenda y los canales de WhatsApp/Telegram.\n\n¿En qué tarea automatizada te ayudo hoy?',
+      text: '¡Hola! Soy **Charly**, tu Asistente Inmobiliario Autónomo 24/7 de OpenClaw impulsado por **GCP Vertex AI (Gemini 1.5 Flash)**. Estoy conectado al inventario privado, la agenda y los canales de WhatsApp/Telegram.\n\n¿En qué tarea automatizada te ayudo hoy?',
       time: '19:45 PM',
       type: 'welcome'
     },

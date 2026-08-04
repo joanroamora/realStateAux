@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot, UserPlus, Database, ShieldCheck, Sparkles } from 'lucide-react';
+import { Bot, UserPlus, Database, ShieldCheck, Sparkles, Cpu } from 'lucide-react';
 
 export default function Navbar({ onOpenAdmin, onOpenData, activeAgent }) {
   return (
@@ -16,12 +16,13 @@ export default function Navbar({ onOpenAdmin, onOpenData, activeAgent }) {
               <h1 className="font-['Outfit'] font-extrabold text-xl tracking-tight text-white">
                 realState<span className="text-emerald-400">Aux</span>
               </h1>
-              <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">
-                v2.0 OpenClaw
+              <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1">
+                <Cpu className="w-3 h-3 text-emerald-400" />
+                Vertex AI Gemini
               </span>
             </div>
             <p className="text-xs text-gray-400 hidden sm:block">
-              Asistente Inmobiliario Autónomo Multi-Usuario (GCP e2-micro)
+              Asistente Inmobiliario Autónomo Multi-Usuario (GCP e2-micro + Vertex AI)
             </p>
           </div>
         </div>

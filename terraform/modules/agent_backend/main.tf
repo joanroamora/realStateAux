@@ -19,13 +19,23 @@ resource "google_compute_instance" "openclaw_backend" {
     # SIN access_config -> 100% aislada de Internet público. Solo accesible vía proxy/túnel.
   }
 
+  # Configuración de Service Account para acceso nativo a GCP Vertex AI (Gemini)
+  dynamic "service_account" {
+    for_each = var.service_account_email != "" ? [var.service_account_email] : []
+    content {
+      email  = service_account.value
+      scopes = ["cloud-platform"]
+    }
+  }
+
   metadata_startup_script = <<-EOF
     #!/bin/bash
     sudo apt-get update
     sudo apt-get install -y docker.io jq curl
     sudo systemctl enable docker
     sudo systemctl start docker
-    echo "Instancia aislada de OpenClaw lista para ejecucion 24/7 de usuario ${count.index + 1}"
+    echo "VERTEX_AI_MODEL=gemini-1.5-flash" >> /etc/environment
+    echo "Instancia aislada de OpenClaw con GCP Vertex AI lista para ejecución 24/7 de usuario ${count.index + 1}"
   EOF
 
   scheduling {
@@ -34,9 +44,10 @@ resource "google_compute_instance" "openclaw_backend" {
   }
 
   labels = {
-    tier       = "openclaw-backend"
-    multi_user = "isolated-instance"
-    cost_tier  = "micro-economic"
-    user_id    = "user-${count.index + 1}"
+    tier        = "openclaw-backend"
+    multi_user  = "isolated-instance"
+    cost_tier   = "micro-economic"
+    user_id     = "user-${count.index + 1}"
+    ai_provider = "gcp-vertex-ai"
   }
 }

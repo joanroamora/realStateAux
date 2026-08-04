@@ -32,3 +32,9 @@ variable "disk_size_gb" {
   description = "Tamaño de disco mínimo por instancia aislada"
   default     = 10
 }
+
+variable "service_account_email" {
+  type        = string
+  description = "Email de la Service Account de GCP con permisos para Vertex AI"
+  default     = ""
+}
