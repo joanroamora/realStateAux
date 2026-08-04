@@ -1,0 +1,50 @@
+name: Teardown & Zero Trace Purge (GCP)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_destroy:
+        description: 'Escribe "DELETE_ALL" para autorizar la destrucción completa y purga en GCP'
+        required: true
+        default: ''
+
+jobs:
+  destroy-and-verify:
+    name: 💣 Destrucción Segura y Purga de Cero Rastro
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validar Autorización de Destrucción
+        run: |
+          if [ "${{ github.event.inputs.confirm_destroy }}" != "DELETE_ALL" ]; then
+            echo "❌ ERROR: No se proporcionó la confirmación requerida 'DELETE_ALL'. Cancelando."
+            exit 1
+          fi
+          echo "✅ Autorización confirmada para eliminación completa de la infraestructura."
+
+      - name: Checkout Código
+        uses: actions/checkout@v4
+
+      - name: Configurar Autenticación GCP
+        if: secrets.GCP_SA_KEY != ''
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configurar Google Cloud SDK
+        if: secrets.GCP_SA_KEY != ''
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configurar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.5.7"
+
+      - name: Ejecutar Script de Destrucción y Purga
+        run: |
+          cd terraform
+          bash destroy_infrastructure.sh --force
+
+      - name: Ejecutar Auditoría de Certificación Cero Rastro
+        run: |
+          cd terraform
+          python3 verify_zero_trace.py --project="${{ secrets.GCP_PROJECT_ID }}"
