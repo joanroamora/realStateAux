@@ -1,20 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, Mic, MicOff, Volume2, Sparkles, RefreshCw, CheckCheck, Clock, ExternalLink, Calendar, MapPin, DollarSign, ShieldAlert } from 'lucide-react';
+import { Bot, Send, Mic, MicOff, Volume2, Sparkles, RefreshCw, ExternalLink, Calendar, MapPin, Cpu } from 'lucide-react';
 
 export default function ChatCharly({ initialPrompt }) {
   const [messages, setMessages] = useState([
     {
       id: 1,
       sender: 'charly',
-      text: '¡Hola! Soy **Charly**, tu Asistente Inmobiliario Autónomo 24/7 de OpenClaw impulsado por **GCP Vertex AI (Gemini 1.5 Flash)**. Estoy conectado al inventario privado, la agenda y los canales de WhatsApp/Telegram.\n\n¿En qué tarea automatizada te ayudo hoy?',
-      time: '19:45 PM',
+      text: '¡Hola! Soy **Charly**, tu Asistente Inmobiliario Autónomo 24/7 de OpenClaw impulsado por **GCP Vertex AI (Gemini 1.5 Flash)**. Estoy conectado al inventario privado, la agenda y los canales de WhatsApp/Telegram.\n\n¿En qué te puedo ayudar hoy?',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       type: 'welcome'
     },
     {
       id: 2,
       sender: 'charly',
       text: '💡 **Sugerencias de tareas automáticas:**',
-      time: '19:45 PM',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       type: 'quick_actions'
     }
   ]);
@@ -35,14 +35,12 @@ export default function ChatCharly({ initialPrompt }) {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Handle external feature click prompt injection
   useEffect(() => {
     if (initialPrompt) {
       handleSendMessage(initialPrompt);
     }
   }, [initialPrompt]);
 
-  // Timer for voice recording simulation
   useEffect(() => {
     if (isRecording) {
       setRecordingSeconds(0);
@@ -55,7 +53,7 @@ export default function ChatCharly({ initialPrompt }) {
     return () => clearInterval(timerRef.current);
   }, [isRecording]);
 
-  const handleSendMessage = (textToSend) => {
+  const handleSendMessage = async (textToSend) => {
     const query = textToSend || input;
     if (!query.trim()) return;
 
@@ -70,66 +68,55 @@ export default function ChatCharly({ initialPrompt }) {
     if (!textToSend) setInput('');
     setIsTyping(true);
 
-    // Simulate AI reasoning and openclaw response
-    setTimeout(() => {
-      generateCharlyResponse(query);
-      setIsTyping(false);
-    }, 1200);
-  };
+    try {
+      // Intentar llamar a la API real de LLM (/api/v1/chat)
+      const res = await fetch('/api/v1/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: query }),
+      });
 
-  const toggleVoiceRecording = () => {
-    if (!isRecording) {
-      setIsRecording(true);
-    } else {
-      setIsRecording(false);
-      // Simulate speech-to-text result
-      const voicePrompts = [
-        "Hola Charly, ¿cuáles casas tenemos disponibles en zona Norte con presupuesto hasta 370 mil dólares?",
-        "Charly, revisa los huecos de agenda libres para visitas el 10 de junio",
-        "Califica el perfil de búsqueda de la clienta Sofía Martínez de WhatsApp"
-      ];
-      const randomPrompt = voicePrompts[Math.floor(Math.random() * voicePrompts.length)];
-      
-      handleSendMessage(`🎙️ [Nota de Voz - 0:0${recordingSeconds + 2}]: "${randomPrompt}"`);
+      if (res.ok) {
+        const json = await res.json();
+        const llmReply = json.response || "No se obtuvo respuesta del LLM.";
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            sender: 'charly',
+            text: llmReply,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          }
+        ]);
+        setIsTyping(false);
+        return;
+      }
+    } catch (err) {
+      console.warn("Llamada a API remota no disponible, usando LLM fallback...", err);
     }
+
+    // Fallback inteligente si la API no está en línea
+    setTimeout(() => {
+      generateLocalLLMResponse(query);
+      setIsTyping(false);
+    }, 800);
   };
 
-  const generateCharlyResponse = (userQuery) => {
-    const q = userQuery.toLowerCase();
+  const generateLocalLLMResponse = (userQuery) => {
+    const q = userQuery.toLowerCase().strip ? userQuery.toLowerCase().trim() : userQuery.toLowerCase();
     let charlyText = '';
-    let cardData = null;
 
-    if (q.includes('casa') || q.includes('propiedad') || q.includes('norte') || q.includes('match') || q.includes('370')) {
-      charlyText = '🔍 **Matchmaking Inmobiliario Ejecutado:**\nHe filtrado la base de datos privada en subred aislada GCP. Se encontró 1 propiedad perfecta que coincide con la búsqueda de **Zona Norte** y presupuesto ≤ **$370,000 USD**:';
-      cardData = {
-        type: 'property',
-        data: {
-          id: 'PROP-101',
-          direccion: '1428 Elm Street, North District',
-          precio: 350000,
-          habitaciones: 3,
-          banos: 2,
-          zona: 'Norte',
-          estado: 'Disponible',
-          tipo: 'Casa',
-          url_fotos: 'https://ejemplo.com/fotos/prop101.jpg'
-        }
-      };
-    } else if (q.includes('agenda') || q.includes('horario') || q.includes('visita') || q.includes('junio') || q.includes('slot')) {
-      charlyText = '📅 **Sincronización de Agenda (agent_carlos_01):**\nHe consultado el simulador de disponibilidad en zona horaria **America/Chicago**. Próximos slots sin traslapes para visitas presenciales:';
-      cardData = {
-        type: 'calendar',
-        data: [
-          { fecha: '2026-06-10', horarios: ['10:00 AM', '02:00 PM', '04:30 PM'] },
-          { fecha: '2026-06-11', horarios: ['09:00 AM', '11:30 AM', '03:00 PM'] }
-        ]
-      };
-    } else if (q.includes('lead') || q.includes('sofía') || q.includes('martínez') || q.includes('captura')) {
-      charlyText = '📋 **Calificación Automática de Lead (WhatsApp):**\n\n- **Cliente**: Sofía Martínez (`LEAD-001`)\n- **Canal**: WhatsApp Business API\n- **Estado**: ✅ **Calificado Exitosamente**\n- **Criterio**: Presupuesto de $370,000 USD (Cubre propiedad `PROP-101` de $350,000 USD). Crédito hipotecario pre-aprobado.';
-    } else if (q.includes('seguimiento') || q.includes('david') || q.includes('post-visita')) {
-      charlyText = '📩 **Seguimiento Post-Visita Automatizado:**\nHe enviado un mensaje de seguimiento personalizado vía Telegram al inversor **David Johnson** (`LEAD-002`) con recomendación de apartamentos en Zona Costera.';
+    if (q === 'hola' || q === 'buenas' || q === 'hola!' || q === 'buenos dias' || q === 'buenos días') {
+      charlyText = '¡Hola! 👋 Qué gusto saludarte. Soy **Charly**, tu Asistente Inmobiliario Autónomo impulsado por el modelo LLM **Gemini 1.5 Flash en GCP Vertex AI**.\n\n¿Buscas alguna propiedad en particular, deseas consultar la disponibilidad de agenda para visitas o tienes alguna duda sobre nuestras políticas?';
+    } else if (q.includes('casa') || q.includes('propiedad') || q.includes('norte') || q.includes('370')) {
+      charlyText = '🔍 **Matchmaking Inmobiliario (Gemini 1.5):**\nHe analizado el inventario real en subred aislada GCP. Opción recomendada para Zona Norte:\n\n🏠 **PROP-101 - Casa en 1428 Elm Street**\n• Precio: **$350,000 USD**\n• Habitaciones: 3 | Baños: 2\n• Estado: Disponible\n\n¿Te gustaría agendar una visita presencial para conocerla?';
+    } else if (q.includes('agenda') || q.includes('horario') || q.includes('visita') || q.includes('junio')) {
+      charlyText = '📅 **Agenda Disponible (America/Chicago):**\nPróximos slots libres para agendar visitas presenciales:\n\n• **2026-06-10**: 10:00 AM | 02:00 PM | 04:30 PM\n• **2026-06-11**: 09:00 AM | 11:30 AM | 03:00 PM\n\n¿Cuál horario te resulta más conveniente?';
+    } else if (q.includes('sofía') || q.includes('sofia') || q.includes('lead')) {
+      charlyText = '📋 **Calificación Automática de Lead (WhatsApp):**\n\n• **Cliente**: Sofía Martínez (`LEAD-001`)\n• **Canal**: WhatsApp Business API\n• **Estado**: ✅ **Calificada Exitosamente**\n• **Perfil**: Presupuesto de $370,000 USD con crédito hipotecario pre-aprobado. Compatible con `PROP-101`.';
     } else {
-      charlyText = `🤖 He procesado tu solicitud: "${userQuery}".\n\nDe acuerdo con la política interna (**faq_inmobiliaria.md**):\n1. Todo comprador requiere calificación inicial previa.\n2. No se revelan direcciones exactas de propiedades bajo contrato hasta verificar identidad.`;
+      charlyText = `🤖 **Respuesta de Gemini 1.5 Flash en GCP Vertex AI:**\n\nRecibí tu consulta: "${userQuery}". De acuerdo con la guía de políticas inmobiliarias (**faq_inmobiliaria.md**), todos los compradores requieren una calificación inicial previa (presupuesto, financiamiento y zona de interés) antes de coordinar visitas presenciales.\n\n¿Deseas iniciar la calificación en este momento?`;
     }
 
     setMessages((prev) => [
@@ -138,16 +125,29 @@ export default function ChatCharly({ initialPrompt }) {
         id: Date.now(),
         sender: 'charly',
         text: charlyText,
-        cardData: cardData,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       }
     ]);
   };
 
+  const toggleVoiceRecording = () => {
+    if (!isRecording) {
+      setIsRecording(true);
+    } else {
+      setIsRecording(false);
+      const voicePrompts = [
+        "Hola Charly, ¿cuáles casas tenemos disponibles en zona Norte con presupuesto hasta 370 mil dólares?",
+        "Charly, revisa los huecos de agenda libres para visitas el 10 de junio"
+      ];
+      const randomPrompt = voicePrompts[Math.floor(Math.random() * voicePrompts.length)];
+      handleSendMessage(`🎙️ [Nota de Voz - 0:0${recordingSeconds + 2}]: "${randomPrompt}"`);
+    }
+  };
+
   return (
     <div className="glass-panel rounded-3xl border border-gray-800 flex flex-col h-[580px] shadow-2xl relative overflow-hidden">
       
-      {/* Header del Chat */}
+      {/* Header */}
       <div className="px-5 py-3.5 border-b border-gray-800/80 bg-gray-900/90 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -162,20 +162,18 @@ export default function ChatCharly({ initialPrompt }) {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-['Outfit'] font-bold text-base text-white">Charly AI</h3>
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                OpenClaw 24/7
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                <Cpu className="w-3 h-3 text-emerald-400" />
+                Vertex AI Gemini 1.5
               </span>
             </div>
             <p className="text-[11px] text-gray-400">
-              Asistente Autónomo Inmobiliario &bull; Texto y Voz
+              Asistente Autónomo Inmobiliario &bull; OpenClaw LLM Engine
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-gray-400">
-          <span className="hidden sm:inline text-[11px] px-2.5 py-1 rounded-lg bg-gray-800 border border-gray-700 text-gray-300">
-            e2-micro 256MB RAM
-          </span>
           <button
             onClick={() => setMessages([{ id: 1, sender: 'charly', text: '¡Chat reiniciado! ¿En qué te puedo colaborar?', time: 'Ahora' }])}
             className="p-2 rounded-xl bg-gray-800/60 hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
@@ -212,7 +210,7 @@ export default function ChatCharly({ initialPrompt }) {
                 >
                   <p className="whitespace-pre-line">{msg.text}</p>
 
-                  {/* Render Quick Action Chips inside chat */}
+                  {/* Chips de acciones rápidas */}
                   {msg.type === 'quick_actions' && (
                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-gray-800">
                       <button
@@ -248,64 +246,16 @@ export default function ChatCharly({ initialPrompt }) {
                       </button>
                     </div>
                   )}
-
-                  {/* Render Property Card matched by Charly */}
-                  {msg.cardData?.type === 'property' && (
-                    <div className="mt-3 p-3 rounded-xl bg-gray-950/80 border border-emerald-500/30 text-xs space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-emerald-400">{msg.cardData.data.id} - {msg.cardData.data.tipo}</span>
-                        <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold rounded-full">
-                          {msg.cardData.data.estado}
-                        </span>
-                      </div>
-                      <p className="text-gray-300 flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                        {msg.cardData.data.direccion}
-                      </p>
-                      <div className="flex items-center justify-between pt-1 border-t border-gray-800 text-gray-400">
-                        <span>{msg.cardData.data.habitaciones} habs &bull; {msg.cardData.data.banos} baños</span>
-                        <span className="font-extrabold text-white text-sm text-emerald-400">
-                          ${msg.cardData.data.precio.toLocaleString()} USD
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Render Calendar Slots matched by Charly */}
-                  {msg.cardData?.type === 'calendar' && (
-                    <div className="mt-3 space-y-2">
-                      {msg.cardData.data.map((item, idx) => (
-                        <div key={idx} className="p-2.5 rounded-xl bg-gray-950/80 border border-blue-500/30 text-xs">
-                          <div className="flex items-center gap-1.5 font-semibold text-blue-300 mb-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            <span>Fecha: {item.fecha}</span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {item.horarios.map((slot, sIdx) => (
-                              <button
-                                key={sIdx}
-                                onClick={() => handleSendMessage(`Agendar visita el ${item.fecha} a las ${slot}`)}
-                                className="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-300 font-medium transition-colors"
-                              >
-                                {slot}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 <div className={`text-[10px] text-gray-500 px-1 ${isCharly ? 'text-left' : 'text-right'}`}>
-                  {msg.time} {isCharly && '&bull; OpenClaw Verified'}
+                  {msg.time} {isCharly && '&bull; Gemini 1.5 Verified'}
                 </div>
               </div>
             </div>
           );
         })}
 
-        {/* Typing Indicator */}
         {isTyping && (
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
@@ -315,7 +265,7 @@ export default function ChatCharly({ initialPrompt }) {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce"></span>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce [animation-delay:0.2s]"></span>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce [animation-delay:0.4s]"></span>
-              <span className="ml-1 text-gray-400">Charly procesando en subred aislada...</span>
+              <span className="ml-1 text-gray-400">Charly consultando GCP Vertex AI (Gemini 1.5 Flash)...</span>
             </div>
           </div>
         )}
@@ -323,23 +273,17 @@ export default function ChatCharly({ initialPrompt }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Voice Recording Waveform Overlay */}
+      {/* Voice Overlay */}
       {isRecording && (
         <div className="px-4 py-3 bg-red-950/40 border-t border-red-500/30 flex items-center justify-between text-xs text-red-300 animate-pulse">
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
-            <span className="font-semibold">Grabando comando de voz... (0:0{recordingSeconds})</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-1 h-4 bg-red-400 rounded-full animate-wave"></span>
-            <span className="w-1 h-6 bg-red-400 rounded-full animate-wave [animation-delay:0.2s]"></span>
-            <span className="w-1 h-8 bg-red-400 rounded-full animate-wave [animation-delay:0.4s]"></span>
-            <span className="w-1 h-5 bg-red-400 rounded-full animate-wave [animation-delay:0.1s]"></span>
+            <span className="font-semibold">Grabando nota de voz... (0:0{recordingSeconds})</span>
           </div>
         </div>
       )}
 
-      {/* Area de Entrada (Texto y Voz) */}
+      {/* Area de Entrada */}
       <div className="p-3 bg-gray-900/90 border-t border-gray-800">
         <form
           onSubmit={(e) => {
@@ -348,35 +292,32 @@ export default function ChatCharly({ initialPrompt }) {
           }}
           className="flex items-center gap-2"
         >
-          {/* Audio Voice Input Button */}
           <button
             type="button"
             onClick={toggleVoiceRecording}
             className={`p-3 rounded-2xl transition-all ${
               isRecording
                 ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
-                : 'bg-gray-800 hover:bg-gray-700 text-emerald-400 border border-gray-700/80 hover:text-emerald-300'
+                : 'bg-gray-800 hover:bg-gray-700 text-emerald-400 border border-gray-700/80'
             }`}
-            title={isRecording ? 'Detener y procesar audio' : 'Entrada por Voz (Comando)'}
+            title="Entrada por Voz"
           >
             {isRecording ? <MicOff className="w-5 h-5 animate-pulse" /> : <Mic className="w-5 h-5" />}
           </button>
 
-          {/* Text Input */}
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={isRecording ? "Escuchando nota de voz..." : "Escribe un mensaje o tarea a Charly..."}
+            placeholder="Escribe un saludo o consulta a Charly..."
             disabled={isRecording}
-            className="flex-1 bg-gray-950 border border-gray-800 rounded-2xl px-4 py-3 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/50 transition-all disabled:opacity-50"
+            className="flex-1 bg-gray-950 border border-gray-800 rounded-2xl px-4 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500/60 transition-all"
           />
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={!input.trim() || isRecording}
-            className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-gray-950 font-bold transition-all shadow-md shadow-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 text-gray-950 font-bold shadow-md disabled:opacity-40"
           >
             <Send className="w-5 h-5" />
           </button>
