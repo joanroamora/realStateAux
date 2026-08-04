@@ -1,0 +1,14 @@
+{
+    "agente_id": "agent_carlos_01",
+    "zona_horaria": "America/Chicago",
+    "slots_disponibles": [
+        {
+            "fecha": "2026-06-10",
+            "horarios": ["10:00 AM", "02:00 PM", "04:30 PM"]
+        },
+        {
+            "fecha": "2026-06-11",
+            "horarios": ["09:00 AM", "11:30 AM", "03:00 PM"]
+        }
+    ]
+}

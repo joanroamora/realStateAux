@@ -1,0 +1,14 @@
+[
+  {
+    "lead_id": "LEAD-001",
+    "nombre": "Sofia Martínez",
+    "canal": "WhatsApp",
+    "perfil_busqueda": "Busca casa de 3 habitaciones en zona norte, presupuesto hasta $370,000 USD, prefiere crédito hipotecario."
+  },
+  {
+    "lead_id": "LEAD-002",
+    "nombre": "David Johnson",
+    "canal": "Telegram",
+    "perfil_busqueda": "Inversionista buscando propiedades tipo apartamento en zona costera, pago de contado."
+  }
+]

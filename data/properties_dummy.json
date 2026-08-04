@@ -1,0 +1,35 @@
+[
+  {
+    "id": "PROP-101",
+    "direccion": "1428 Elm Street, North District",
+    "precio": 350000,
+    "habitaciones": 3,
+    "banos": 2,
+    "zona": "Norte",
+    "estado": "Disponible",
+    "tipo": "Casa",
+    "url_fotos": "https://ejemplo.com/fotos/prop101.jpg"
+  },
+  {
+    "id": "PROP-102",
+    "direccion": "894 Maple Avenue, West Hills",
+    "precio": 480000,
+    "habitaciones": 4,
+    "banos": 3,
+    "zona": "Oeste",
+    "estado": "Disponible",
+    "tipo": "Casa",
+    "url_fotos": "https://ejemplo.com/fotos/prop102.jpg"
+  },
+  {
+    "id": "PROP-103",
+    "direccion": "55 Ocean Drive, Bay View",
+    "precio": 620000,
+    "habitaciones": 2,
+    "banos": 2,
+    "zona": "Costera",
+    "estado": "Bajo Contrato",
+    "tipo": "Apartamento",
+    "url_fotos": "https://ejemplo.com/fotos/prop103.jpg"
+  }
+]

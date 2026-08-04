@@ -1,0 +1,8 @@
+project_id             = "tu-proyecto-gcp-id"
+region                 = "us-central1"
+zone                   = "us-central1-a"
+environment            = "prod"
+network_name           = "realstate-vpc-prod"
+db_machine_type        = "e2-micro"
+backend_machine_type   = "e2-micro"
+backend_instance_count = 1
