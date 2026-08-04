@@ -47,8 +47,8 @@ resource "google_compute_firewall" "allow_frontend_to_db" {
 
 # Regla 4: Bloquear explícitamente todo ingreso de Internet a la capa Backend y DB
 resource "google_compute_firewall" "deny_internet_to_backend_db" {
-  name    = "${var.network_name}-deny-internet-to-internal"
-  network = var.network_name
+  name     = "${var.network_name}-deny-internet-to-internal"
+  network  = var.network_name
   priority = 2000
 
   deny {

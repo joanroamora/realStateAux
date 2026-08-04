@@ -34,9 +34,9 @@ resource "google_compute_instance" "openclaw_backend" {
   }
 
   labels = {
-    tier        = "openclaw-backend"
-    multi_user  = "isolated-instance"
-    cost_tier   = "micro-economic"
-    user_id     = "user-${count.index + 1}"
+    tier       = "openclaw-backend"
+    multi_user = "isolated-instance"
+    cost_tier  = "micro-economic"
+    user_id    = "user-${count.index + 1}"
   }
 }

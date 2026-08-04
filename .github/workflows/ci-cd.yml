@@ -2,7 +2,7 @@ name: CI/CD Pipeline & GitHub Packages (GHCR)
 
 on:
   push:
-    branches: [ "main", "Feature*", "Feature1Architecture", "Feature2IAEngine", "Feature3Gui" ]
+    branches: [ "main", "Feature*" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
@@ -33,7 +33,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r api/requirements.txt
-          pip install httpx
 
       - name: Ejecutar Pruebas Automatizadas API
         run: |
@@ -60,7 +59,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r agent_engine/requirements.txt
-          pip install httpx
 
       - name: Ejecutar Pruebas SRE de Aprovisionamiento
         run: |
@@ -113,7 +111,7 @@ jobs:
         run: |
           cd terraform
           terraform init -backend=false
-          terraform fmt -check
+          terraform fmt -check -recursive
           terraform validate
 
   # -------------------------------------------------------------

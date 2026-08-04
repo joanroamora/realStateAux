@@ -15,8 +15,12 @@ jobs:
     steps:
       - name: Validar Autorización de Destrucción
         run: |
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "ℹ️ Este workflow únicamente se ejecuta manualmente vía workflow_dispatch. Omitiendo."
+            exit 0
+          fi
           if [ "${{ github.event.inputs.confirm_destroy }}" != "DELETE_ALL" ]; then
-            echo "❌ ERROR: No se proporcionó la confirmación requerida 'DELETE_ALL'. Cancelando."
+            echo "❌ ERROR: No se proporcionó la confirmación requerida 'DELETE_ALL'. Cancelando la ejecución."
             exit 1
           fi
           echo "✅ Autorización confirmada para eliminación completa de la infraestructura."

@@ -14,7 +14,7 @@ output "openclaw_backend_internal_ips" {
 }
 
 output "cost_optimization_summary" {
-  value = <<-EOF
+  value       = <<-EOF
     ===============================================================
     RESUMEN DE OPTIMIZACIÓN DE COSTOS DE INFRAESTRUCTURA (GCP)
     ===============================================================
