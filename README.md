@@ -10,7 +10,7 @@ El sistema está diseñado para que corredores y agencias inmobiliarias cuenten 
 
 ---
 
-## 📁 Estructura del Repositorio (`Feature2IAEngine`)
+## 📁 Estructura del Repositorio (`Feature3Gui`)
 
 ```
 .
@@ -20,36 +20,50 @@ El sistema está diseñado para que corredores y agencias inmobiliarias cuenten 
 │   ├── calendar_mock.json             # Simulador de disponibilidad de agenda del agente
 │   ├── faq_inmobiliaria.md            # Base de conocimiento y políticas de atención
 │   └── leads_synthetic.json           # Perfiles sintéticos de leads (WhatsApp / Telegram)
+├── frontend/                          # Interfaz Web UI/UX (React.js + Tailwind CSS)
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Navbar.jsx             # Barra superior con estado de red VPC aislada
+│   │   │   ├── FeatureGrid.jsx        # Tarjetas interactivas de las 4 tareas automáticas
+│   │   │   ├── ChatCharly.jsx         # Chat central con Charly AI (Texto, Voz & Chips)
+│   │   │   ├── AdminModal.jsx         # Panel de alta de usuarios y aprovisionamiento SRE
+│   │   │   └── DataExplorerModal.jsx  # Visualizador de datos JSON/MD privados
+│   │   ├── App.jsx                    # Layout principal y coordinación de modales
+│   │   └── index.css                  # Estilos glassmorphism y sistema de diseño
+│   ├── package.json                   # React 19, Lucide Icons & Tailwind v4
+│   └── vite.config.js                 # Configuración de empaquetado optimizado
 ├── api/                               # API REST Ligera (FastAPI - Python)
 │   ├── app/                           # Endpoints (/properties, /calendar, /faq, /leads)
 │   ├── requirements.txt               # Dependencias Python ultraligeras
-│   ├── Dockerfile                     # Construcción Docker optimizada para e2-micro
-│   └── test_api.py                    # Suite de pruebas automatizadas
+│   └── Dockerfile                     # Construcción Docker optimizada para e2-micro
 ├── agent_engine/                      # Orquestador SRE y Motor de Agentes OpenClaw
 │   ├── app/                           # API Admin (/admin/provision, /admin/instances)
-│   │   ├── main.py                    # Admin Panel Backend API
-│   │   ├── provisioner.py             # Docker Container Orchestrator (256MB RAM / 0.5 CPU)
-│   │   ├── crypto.py                  # Cifrado Fernet/AES-256 de credenciales de usuario
-│   │   ├── config.py                  # Parámetros SRE y gestión de recursos
-│   │   └── models.py                  # Esquemas Pydantic
-│   ├── mock_openclaw/                 # Runtime simulado de OpenClaw Agent
-│   │   ├── app.py                     # Ciclo persistente 24/7 consumiendo Data API
-│   │   └── Dockerfile                 # Contenedor ultra ligero Alpine (<20MB)
-│   ├── test_provisioning.py           # Pruebas end-to-end de aprovisionamiento
-│   └── README.md                      # Manual SRE de contenedores y cifrado
+│   └── mock_openclaw/                 # Runtime simulado de OpenClaw Agent
 └── terraform/                         # Infraestructura como Código en GCP
-    ├── main.tf                        # Orquestación de módulos de infraestructura
-    ├── variables.tf                   # Variables globales de Terraform
-    ├── outputs.tf                     # Salidas y resumen de optimización de costos
     └── README.md                      # Manual detallado de despliegue y arquitectura GCP
 ```
 
 ---
 
-## 🤖 Motor de Agentes y Orquestación SRE (`/agent_engine`)
+## 🖥️ Interfaz de Usuario y Panel de Administración (`/frontend`)
 
-- **Aprovisionamiento Dinámico Multi-usuario**: Generación automática de contenedores aislados de OpenClaw por cada nuevo correo de usuario.
-- **Cifrado de Credenciales**: Cifrado simétrico AES-256 para tokens de WhatsApp, Telegram y LLM API Keys.
-- **Límites Estrictos de Recursos**: Máximo `256MB` RAM y `0.5` vCPU por contenedor para evitar sobrecostos en `e2-micro`.
+- **Diseño Responsivo (Mobile-First & Desktop)**: Interfaz minimalista con estética moderna (*glassmorphism*, degradados suaves y tipografía *Inter/Outfit*).
+- **Las 4 Funcionalidades Automatizadas Destacadas**:
+  1. *Captura de Leads* (WhatsApp / Telegram API).
+  2. *Sincronización de Agenda* (America/Chicago sin traslapes).
+  3. *Matchmaking de Propiedades* (Filtro por presupuesto y zona).
+  4. *Seguimiento Post-Visita* (Fidelización automatizada).
+- **Chat Interactivo con "Charly"**: Soporta entrada/salida de **texto**, comandos por **voz con indicador de onda de audio**, chips de acciones rápidas y renderizado interactivo de propiedades y slots.
+- **Panel de Administración Central**: Alta de nuevos usuarios y simulación de aprovisionamiento de contenedores en subred aislada de GCP.
 
-Para más detalles técnicos, consulta el **[README del Orquestador SRE](file:///home/joanr/agentic-platforms/GCP/realStateAux/agent_engine/README.md)**.
+---
+
+## 🚀 Guía de Ejecución Local de la Interfaz
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Navega a `http://localhost:5173` para interactuar con la aplicación web.
