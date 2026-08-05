@@ -44,3 +44,11 @@ variable "backend_instance_count" {
   description = "Número inicial de agentes/instancias aisladas de usuarios"
   default     = 1
 }
+
+variable "gemini_api_key" {
+  type        = string
+  description = "Clave de API de Google Gemini (Google AI Studio)"
+  default     = ""
+  sensitive   = true
+}
+

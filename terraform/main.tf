@@ -74,6 +74,7 @@ module "agent_backend" {
   backend_subnet_id     = module.vpc.backend_subnet_id
   disk_size_gb          = 10
   service_account_email = google_service_account.openclaw_vertex_sa.email
+  gemini_api_key        = var.gemini_api_key
   depends_on            = [google_project_service.vertex_ai_api]
 }
 

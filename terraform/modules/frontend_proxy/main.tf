@@ -294,6 +294,14 @@ resource "google_compute_instance" "frontend_proxy" {
     # CONFIGURACIÓN DE REDUNDANCIA Y REINTENTOS AUTOMÁTICOS NGINX
     cat << 'NGINX_CONF' | sudo tee /etc/nginx/sites-available/default
     upstream openclaw_backend {
+        server 10.0.2.15:8080 max_fails=2 fail_timeout=5s;
+        server 10.0.2.14:8080 max_fails=2 fail_timeout=5s;
+        server 10.0.2.13:8080 max_fails=2 fail_timeout=5s;
+        server 10.0.2.12:8080 max_fails=2 fail_timeout=5s;
+        server 10.0.2.11:8080 max_fails=2 fail_timeout=5s;
+        server 10.0.2.10:8080 max_fails=2 fail_timeout=5s;
+        server 10.0.2.9:8080 max_fails=2 fail_timeout=5s;
+        server 10.0.2.8:8080 max_fails=2 fail_timeout=5s;
         server 10.0.2.7:8080 max_fails=2 fail_timeout=5s;
         server 10.0.2.6:8080 max_fails=2 fail_timeout=5s;
         server 10.0.2.5:8080 max_fails=2 fail_timeout=5s;

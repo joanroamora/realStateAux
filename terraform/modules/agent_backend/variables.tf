@@ -38,3 +38,11 @@ variable "service_account_email" {
   description = "Email de la Service Account de GCP con permisos para Vertex AI"
   default     = ""
 }
+
+variable "gemini_api_key" {
+  type        = string
+  description = "Clave de API de Google Gemini"
+  default     = ""
+  sensitive   = true
+}
+
